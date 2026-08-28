@@ -1,0 +1,134 @@
+# =============================================================================
+# CampusFind :: Docker Compose
+#
+# Everything here is namespaced so it cannot collide with other stacks on this
+# machine: its own project name, network, volume, container names and host
+# ports.  Nothing outside this file is touched.
+#
+#   docker compose up -d          start
+#   docker compose logs -f api    follow backend logs
+#   docker compose down           stop (data is kept)
+#   docker compose down -v        stop and DELETE the CampusFind volume only
+# =============================================================================
+name: campusfind
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 16 -- the heart of the project.
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: campusfind-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-campusfind}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required, copy .env.example to .env}
+      POSTGRES_DB: ${POSTGRES_DB:-campusfind}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      # Host port is 55432 so it never fights with a local postgres on 5432.
+      - "${POSTGRES_PORT:-55432}:5432"
+    volumes:
+      - campusfind_pgdata:/var/lib/postgresql/data
+      # Read-only mounts: the container can never modify your SQL files.
+      - ./database:/sql:ro
+      - ./database/docker-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-campusfind} -d ${POSTGRES_DB:-campusfind}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    networks:
+      - campusfind-net
+
+  # ---------------------------------------------------------------------------
+  # pgAdmin -- inspect tables, run SQL, view the ER relationships visually.
+  # ---------------------------------------------------------------------------
+  pgadmin:
+    image: dpage/pgadmin4:8.14
+    container_name: campusfind-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@campusfind.edu}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?PGADMIN_PASSWORD is required}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGADMIN_DISABLE_POSTFIX: "True"
+    ports:
+      - "${PGADMIN_PORT:-5051}:80"
+    volumes:
+      - campusfind_pgadmin:/var/lib/pgadmin
+      # Pre-registers the CampusFind server so there is nothing to configure.
+      - ./database/pgadmin/servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - campusfind-net
+
+  # ---------------------------------------------------------------------------
+  # Express + TypeScript API
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: campusfind-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4001
+      # Inside the compose network the database is reachable on its service
+      # name and the internal port 5432, not the published host port.
+      PGHOST: postgres
+      PGPORT: 5432
+      PGUSER: ${POSTGRES_USER:-campusfind}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-campusfind}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-12h}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5174}
+      PUBLIC_APP_URL: ${PUBLIC_APP_URL:-}
+    ports:
+      - "${API_PORT:-4001}:4001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks:
+      - campusfind-net
+
+  # ---------------------------------------------------------------------------
+  # React frontend, built with Vite and served by nginx.
+  # ---------------------------------------------------------------------------
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api}
+    container_name: campusfind-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-5174}:80"
+    depends_on:
+      - api
+    networks:
+      - campusfind-net
+
+volumes:
+  campusfind_pgdata:
+    name: campusfind_pgdata
+  campusfind_pgadmin:
+    name: campusfind_pgadmin
+
+networks:
+  campusfind-net:
+    name: campusfind-net
+    driver: bridge

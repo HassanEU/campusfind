@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   CampusFind design tokens
+   Defined once as CSS variables so light and dark themes share one structure
+   and every component reads the same values.
+   ========================================================================== */
+
+@layer base {
+  :root {
+    /* Canvas is a hair warm so long reading sessions are easier on the eye
+       than pure #FFFFFF, while panels stay white to create hierarchy. */
+    --background: 220 20% 98%;
+    --foreground: 222 44% 11%;
+
+    --surface: 0 0% 100%;
+    --surface-muted: 220 22% 96.5%;
+    --surface-raised: 0 0% 100%;
+
+    --muted: 220 20% 96%;
+    --muted-foreground: 220 12% 46%;
+
+    --border: 220 18% 90%;
+    --input: 220 18% 88%;
+    --ring: 226 72% 56%;
+
+    /* Brand: an assured indigo-blue. Used for primary actions and nothing
+       decorative, so a blue element always means "this is the main action". */
+    --primary: 226 72% 56%;
+    --primary-hover: 226 68% 50%;
+    --primary-foreground: 0 0% 100%;
+    --primary-subtle: 226 82% 96%;
+
+    /* Workflow semantics */
+    --success: 158 68% 33%;
+    --success-subtle: 152 60% 95%;
+    --warning: 32 88% 42%;
+    --warning-subtle: 40 90% 95%;
+    --danger: 353 68% 48%;
+    --danger-subtle: 353 85% 96%;
+    --info: 199 82% 40%;
+    --info-subtle: 199 85% 95%;
+
+    --shadow-color: 222 45% 20%;
+  }
+
+  .dark {
+    --background: 224 32% 8%;
+    --foreground: 220 24% 94%;
+
+    --surface: 224 28% 11%;
+    --surface-muted: 224 26% 14%;
+    --surface-raised: 224 26% 13%;
+
+    --muted: 224 24% 16%;
+    --muted-foreground: 220 12% 62%;
+
+    --border: 224 22% 19%;
+    --input: 224 22% 22%;
+    --ring: 226 78% 66%;
+
+    --primary: 226 78% 64%;
+    --primary-hover: 226 78% 70%;
+    --primary-foreground: 224 40% 10%;
+    --primary-subtle: 226 45% 20%;
+
+    --success: 158 58% 46%;
+    --success-subtle: 158 40% 17%;
+    --warning: 36 84% 56%;
+    --warning-subtle: 36 45% 18%;
+    --danger: 353 72% 62%;
+    --danger-subtle: 353 40% 20%;
+    --info: 199 76% 56%;
+    --info-subtle: 199 45% 18%;
+
+    --shadow-color: 224 60% 3%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    overflow-x: clip;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'ss01';
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+
+  /* A single, consistent focus ring everywhere. Keyboard users always know
+     where they are; mouse users are not distracted by it. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Tabular figures keep dashboard counters from jittering as they update. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    @apply bg-primary/20;
+  }
+
+  /* Slim, unobtrusive scrollbars in scrollable panels. */
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  .scroll-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scroll-thin::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-border;
+  }
+}
+
+@layer components {
+  /* The page-level grid every authenticated screen uses. */
+  .page {
+    @apply mx-auto w-full max-w-[1200px] px-4 py-6 sm:px-6 sm:py-7 lg:px-8;
+  }
+
+  /* Loading placeholder with a light sweep rather than a pulsing block. */
+  .skeleton {
+    @apply relative overflow-hidden rounded-md bg-muted;
+  }
+  .skeleton::after {
+    @apply absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/45 to-transparent;
+    content: '';
+    transform: translateX(-100%);
+  }
+  .dark .skeleton::after {
+    @apply via-white/[0.06];
+  }
+
+  /* Fine dotted grid used behind the landing hero only. */
+  .grid-backdrop {
+    background-image: radial-gradient(hsl(var(--border)) 1px, transparent 1px);
+    background-size: 22px 22px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+  }
+}
+
+/* ==========================================================================
+   Reduced motion
+   Anyone who has asked their OS to reduce motion gets a still interface.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "CampusFind",
+      "Group": "CampusFind",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "campusfind",
+      "Username": "campusfind",
+      "SSLMode": "prefer",
+      "Comment": "CampusFind PostgreSQL instance (inside the campusfind-net network)."
+    }
+  }
+}
