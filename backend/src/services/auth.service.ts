@@ -1,7 +1,9 @@
+import { createHash, timingSafeEqual } from 'node:crypto';
 import * as userRepo from '../repositories/user.repository.js';
+import { env } from '../config/env.js';
 import { ApiError } from '../utils/ApiError.js';
 import { hashPassword, signToken, verifyPassword } from '../utils/auth.js';
-import type { RegisterInput, LoginInput } from '../validators/schemas.js';
+import type { RegisterInput, LoginInput, StaffSetupInput } from '../validators/schemas.js';
 import type { RoleName } from '../types/index.js';
 
 function toPublicUser(row: {
@@ -19,10 +21,16 @@ function toPublicUser(row: {
   };
 }
 
+function secretsEqual(provided: string, expected: string) {
+  const left = createHash('sha256').update(provided).digest();
+  const right = createHash('sha256').update(expected).digest();
+  return timingSafeEqual(left, right);
+}
+
 /**
- * Self-registration always creates a STUDENT.  Staff and admin accounts are
- * promoted by an existing admin, so nobody can sign themselves up as staff and
- * start approving claims.
+ * Self-registration always creates a STUDENT. Staff accounts are created only
+ * through the owner-only setup endpoint, so nobody can sign themselves up as
+ * desk staff and start approving claims.
  */
 export async function register(input: RegisterInput) {
   const existing = await userRepo.findByEmail(input.email);
@@ -44,6 +52,41 @@ export async function register(input: RegisterInput) {
   if (!created) throw new Error('User insert returned no row');
 
   const user = toPublicUser({ ...created, role_name: 'STUDENT' });
+  return { user, token: issueToken(user) };
+}
+
+/**
+ * Owner-only path for the first (or additional) STAFF account. Disabled when
+ * STAFF_SETUP_SECRET is unset so the endpoint cannot be guessed on a public
+ * deployment that never opted in.
+ */
+export async function createStaffAccount(input: StaffSetupInput) {
+  if (!env.staffSetupSecret) {
+    throw ApiError.notFound();
+  }
+  if (!secretsEqual(input.setupSecret, env.staffSetupSecret)) {
+    throw ApiError.unauthorized('That setup key is not valid.');
+  }
+
+  const existing = await userRepo.findByEmail(input.email);
+  if (existing) {
+    throw ApiError.conflict('An account with that email already exists. Try signing in instead.');
+  }
+
+  const passwordHash = await hashPassword(input.password);
+  const created = await userRepo.createUser({
+    fullName: input.fullName,
+    email: input.email,
+    passwordHash,
+    phone: input.phone,
+    enrollmentNo: input.enrollmentNo,
+    department: input.department,
+    roleName: 'STAFF',
+  });
+
+  if (!created) throw new Error('User insert returned no row');
+
+  const user = toPublicUser({ ...created, role_name: 'STAFF' });
   return { user, token: issueToken(user) };
 }
 

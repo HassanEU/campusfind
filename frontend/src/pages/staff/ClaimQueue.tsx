@@ -106,14 +106,14 @@ export default function ClaimQueue() {
                 </div>
 
                 <div className="grid gap-4 px-5 pb-4 sm:grid-cols-2">
-                  <div className="rounded-md border border-border bg-surface-muted/50 p-3">
+                  <div className="rounded-2xl border border-border bg-surface-muted/50 p-3">
                     <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Their proof of ownership
                     </p>
                     <p className="mt-1 text-sm leading-relaxed">{claim.claimDetails}</p>
                   </div>
 
-                  <div className="rounded-md border border-border bg-surface-muted/50 p-3">
+                  <div className="rounded-2xl border border-border bg-surface-muted/50 p-3">
                     <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                       {claim.identifyingDetails ? 'From their original report' : 'Item details'}
                     </p>

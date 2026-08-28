@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 import {
-  ArrowRight, ClipboardList, PackageSearch, Plus, ShieldCheck, Sparkles, CheckCircle2,
+  ArrowRight, ClipboardList, PackageSearch, Plus, Search, ShieldCheck, Sparkles, CheckCircle2,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorState, PageHeader, StatusBadge } from '@/components/ui/primitives';
+import { Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorState, StatusBadge } from '@/components/ui/primitives';
 import { Stat } from '@/components/ui/data';
 import { ScorePill } from '@/components/shared/MatchScore';
 import { useStudentDashboard } from '@/hooks/queries';
@@ -22,7 +22,7 @@ export default function StudentDashboard() {
     return (
       <div className="page">
         <ErrorState
-          title="We could not load your dashboard"
+          title="We could not load your home"
           description="The server did not respond. Check your connection and try again."
           onRetry={() => void refetch()}
         />
@@ -32,21 +32,31 @@ export default function StudentDashboard() {
 
   return (
     <div className="page">
-      <PageHeader
-        title={`Good to see you, ${firstName}`}
-        description="Everything you have reported, every match we found, and anything waiting on you."
-        actions={
-          <Button asChild variant="primary">
-            <Link to="/app/report/lost">
-              <Plus />
-              Report lost item
-            </Link>
-          </Button>
-        }
-      />
+      <section className="relative overflow-hidden rounded-[28px] border border-border/80 bg-surface p-6 shadow-xs sm:p-8">
+        <div className="hero-mesh pointer-events-none absolute inset-0 opacity-80" aria-hidden />
+        <div className="relative">
+          <p className="text-2xs font-semibold uppercase tracking-wider text-primary">Your CampusFind</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+            Welcome back, {firstName}
+          </h1>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+            Report a loss, review matches, and track claims — all from one place.
+          </p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <Button asChild variant="primary" size="lg">
+              <Link to="/app/report/lost">
+                <Plus />
+                Report lost item
+              </Link>
+            </Button>
+            <Button asChild variant="secondary" size="lg">
+              <Link to="/app/browse">Browse found items</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
 
-      {/* Counters — every one of these is a COUNT(*) from PostgreSQL. */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
           label="Reports filed"
           value={counters?.lostReports ?? 0}
@@ -80,8 +90,27 @@ export default function StudentDashboard() {
         />
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
-        {/* ------------------------------ matches ---------------------------- */}
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        {[
+          { to: '/app/report/lost', title: 'Report a lost item', body: 'Category, place, and a detail only you know.', icon: ClipboardList },
+          { to: '/app/report/found', title: 'Hand something in', body: 'Log a found item and print its QR label.', icon: PackageSearch },
+          { to: '/app/browse', title: 'Browse the desk', body: 'See what is waiting to be collected.', icon: Search },
+        ].map((shortcut) => (
+          <Link
+            key={shortcut.to}
+            to={shortcut.to}
+            className="group rounded-2xl border border-border/80 bg-surface p-5 shadow-xs transition-[border-color,background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <span className="flex size-10 items-center justify-center rounded-2xl bg-primary-subtle text-primary">
+              <shortcut.icon className="size-4" />
+            </span>
+            <p className="mt-4 text-sm font-semibold">{shortcut.title}</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{shortcut.body}</p>
+          </Link>
+        ))}
+      </div>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
         <Card>
           <CardHeader className="flex-row items-center justify-between">
             <div>
@@ -102,7 +131,7 @@ export default function StudentDashboard() {
             {isLoading ? (
               <ul className="space-y-2">
                 {[0, 1, 2].map((i) => (
-                  <li key={i} className="rounded-md border border-border p-3.5">
+                  <li key={i} className="rounded-2xl border border-border p-3.5">
                     <div className="skeleton h-4 w-1/2" />
                     <div className="skeleton mt-2 h-3 w-3/4" />
                   </li>
@@ -114,7 +143,7 @@ export default function StudentDashboard() {
                   <li key={match.matchId}>
                     <Link
                       to={`/app/matches/${match.matchId}`}
-                      className="group flex items-center gap-4 rounded-md border border-border p-3.5 transition-colors hover:border-primary/40 hover:bg-surface-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="group flex items-center gap-4 rounded-2xl border border-border/80 p-3.5 transition-colors hover:border-primary/40 hover:bg-surface-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
@@ -146,11 +175,13 @@ export default function StudentDashboard() {
           </CardContent>
         </Card>
 
-        {/* ------------------------- claims + activity ----------------------- */}
         <div className="space-y-4">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex-row items-center justify-between">
               <CardTitle>Active claims</CardTitle>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/app/claims">All</Link>
+              </Button>
             </CardHeader>
             <CardContent className="pt-3">
               {isLoading ? (
@@ -158,10 +189,7 @@ export default function StudentDashboard() {
               ) : data?.activeClaims.length ? (
                 <ul className="space-y-2">
                   {data.activeClaims.map((claim) => (
-                    <li
-                      key={claim.claimId}
-                      className="rounded-md border border-border p-3"
-                    >
+                    <li key={claim.claimId} className="rounded-2xl border border-border/80 p-3">
                       <div className="flex items-start justify-between gap-2">
                         <p className="min-w-0 truncate text-sm font-medium">{claim.foundItemName}</p>
                         <StatusBadge status={claim.status} />
@@ -171,11 +199,6 @@ export default function StudentDashboard() {
                       </p>
                     </li>
                   ))}
-                  <li>
-                    <Button asChild variant="ghost" size="sm" className="w-full">
-                      <Link to="/app/claims">See all claims</Link>
-                    </Button>
-                  </li>
                 </ul>
               ) : (
                 <p className="py-4 text-center text-sm text-muted-foreground">
@@ -219,27 +242,6 @@ export default function StudentDashboard() {
             </CardContent>
           </Card>
         </div>
-      </div>
-
-      {/* ------------------------------ shortcuts --------------------------- */}
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        {[
-          { to: '/app/report/lost', title: 'Report a lost item', body: 'Takes about a minute.', icon: ClipboardList },
-          { to: '/app/report/found', title: 'Hand something in', body: 'Found something? Log it here.', icon: PackageSearch },
-          { to: '/app/browse', title: 'Browse the desk', body: 'See everything waiting to be collected.', icon: Sparkles },
-        ].map((shortcut) => (
-          <Link
-            key={shortcut.to}
-            to={shortcut.to}
-            className="group rounded-lg border border-border bg-surface p-4 shadow-xs transition-[border-color,background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-surface-muted/40 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <span className="flex size-8 items-center justify-center rounded-md bg-surface-muted text-muted-foreground">
-              <shortcut.icon className="size-4" />
-            </span>
-            <p className="mt-3 text-sm font-medium">{shortcut.title}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">{shortcut.body}</p>
-          </Link>
-        ))}
       </div>
     </div>
   );

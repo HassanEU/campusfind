@@ -62,6 +62,10 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Enter your password.'),
 });
 
+export const staffSetupSchema = registerSchema.extend({
+  setupSecret: z.string().min(8, 'Enter the staff setup key.'),
+});
+
 /* -------------------------------------------------------------------------- */
 /* Items                                                                       */
 /* -------------------------------------------------------------------------- */
@@ -182,6 +186,7 @@ export const userUpdateSchema = z.object({
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type StaffSetupInput = z.infer<typeof staffSetupSchema>;
 export type LostItemInput = z.infer<typeof lostItemSchema>;
 export type FoundItemInput = z.infer<typeof foundItemSchema>;
 export type ClaimInput = z.infer<typeof claimSchema>;

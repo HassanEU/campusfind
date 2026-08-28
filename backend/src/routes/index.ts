@@ -12,7 +12,7 @@ import { validateBody, validateQuery } from '../middleware/validate.js';
 import {
   auditQuerySchema, categorySchema, claimDecisionSchema, claimSchema, foundItemSchema,
   listQuerySchema, locationSchema, loginSchema, lostItemSchema, lostItemUpdateSchema,
-  registerSchema, userUpdateSchema, verificationSchema,
+  registerSchema, staffSetupSchema, userUpdateSchema, verificationSchema,
 } from '../validators/schemas.js';
 
 const router = Router();
@@ -44,6 +44,7 @@ router.get('/health', misc.health);
 router.get('/stats/public', misc.publicStats);
 
 router.post('/auth/register', authLimiter, validateBody(registerSchema), auth.register);
+router.post('/auth/staff-setup', authLimiter, validateBody(staffSetupSchema), auth.staffSetup);
 router.post('/auth/login', authLimiter, validateBody(loginSchema), auth.login);
 router.post('/auth/logout', auth.logout);
 router.get('/auth/me', authenticate, auth.me);
@@ -81,11 +82,11 @@ router.patch('/claims/:id', authenticate, validateBody(claimDecisionSchema), cla
 
 /* ------------------------- QR + desk-side verification --------------------- */
 
-router.get('/qr/:code', authenticate, requireRole('STAFF', 'ADMIN'), qrLimiter, misc.lookupQr);
+router.get('/qr/:code', authenticate, requireRole('STAFF'), qrLimiter, misc.lookupQr);
 router.post(
   '/verifications',
   authenticate,
-  requireRole('STAFF', 'ADMIN'),
+  requireRole('STAFF'),
   validateBody(verificationSchema),
   claims.verify,
 );
@@ -94,7 +95,7 @@ router.get('/returns', authenticate, claims.returns);
 /* ------------------------------- dashboards -------------------------------- */
 
 router.get('/dashboard/student', authenticate, misc.studentDashboard);
-router.get('/dashboard/staff', authenticate, requireRole('STAFF', 'ADMIN'), misc.staffDashboard);
+router.get('/dashboard/staff', authenticate, requireRole('STAFF'), misc.staffDashboard);
 
 /* ----------------------------- notifications ------------------------------- */
 
@@ -106,8 +107,8 @@ router.post('/notifications/read-all', authenticate, misc.readAllNotifications);
 
 const adminOnly = [authenticate, requireRole('ADMIN')] as const;
 
-router.get('/admin/analytics', authenticate, requireRole('ADMIN', 'STAFF'), misc.adminAnalytics);
-router.get('/admin/audit-logs', authenticate, requireRole('ADMIN', 'STAFF'),
+router.get('/admin/analytics', authenticate, requireRole('STAFF'), misc.adminAnalytics);
+router.get('/admin/audit-logs', authenticate, requireRole('STAFF'),
   validateQuery(auditQuerySchema), misc.auditLogs);
 router.get('/admin/users', ...adminOnly, misc.listUsers);
 router.patch('/admin/users/:id', ...adminOnly, validateBody(userUpdateSchema), misc.updateUser);

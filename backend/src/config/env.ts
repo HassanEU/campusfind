@@ -69,6 +69,13 @@ export const env = {
    */
   publicAppUrl: optional('PUBLIC_APP_URL', '').replace(/\/$/, ''),
 
+  /**
+   * Optional shared secret that lets the project owner create a STAFF account
+   * without exposing a public "sign up as staff" option. When empty, the
+   * staff-setup endpoint is disabled (404).
+   */
+  staffSetupSecret: optional('STAFF_SETUP_SECRET', ''),
+
   bcryptRounds: Number(optional('BCRYPT_ROUNDS', '10')),
 
   /** Minimum score (out of 100) required before a pair is stored as a match. */

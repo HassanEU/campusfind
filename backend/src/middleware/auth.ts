@@ -29,7 +29,9 @@ export const authenticate: RequestHandler = (req, _res, next) => {
 
 /**
  * Authorization: does the authenticated user hold one of the allowed roles?
- * Used as `requireRole('STAFF', 'ADMIN')` on every desk-side route.
+ * Used as `requireRole('STAFF')` on every desk-side route.
+ * A leftover ADMIN row from the original seed is treated as desk staff so
+ * existing accounts keep working; signup never creates that role.
  */
 export function requireRole(...allowed: RoleName[]): RequestHandler {
   return (req, _res, next) => {
@@ -37,8 +39,12 @@ export function requireRole(...allowed: RoleName[]): RequestHandler {
       next(ApiError.unauthorized());
       return;
     }
-    if (!allowed.includes(req.user.role)) {
-      next(ApiError.forbidden('This area is restricted to ' + allowed.join(' and ') + ' accounts.'));
+    const role = req.user.role;
+    const ok =
+      allowed.includes(role) ||
+      (role === 'ADMIN' && allowed.includes('STAFF'));
+    if (!ok) {
+      next(ApiError.forbidden());
       return;
     }
     next();

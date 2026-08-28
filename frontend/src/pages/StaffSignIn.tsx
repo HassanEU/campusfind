@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ArrowRight, ClipboardList, Eye, EyeOff, PackageSearch, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, QrCode, ShieldCheck, ScanLine } from 'lucide-react';
 
 import { Logo } from '@/components/layout/Logo';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Field, Input } from '@/components/ui/form';
 import { useAuth } from '@/hooks/useAuth';
 import { ApiError } from '@/lib/api';
 
-export default function SignIn() {
+export default function StaffSignIn() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,10 +30,15 @@ export default function SignIn() {
     setSubmitting(true);
 
     try {
-      const user = await signIn(email, password, 'student');
+      const user = await signIn(email, password, 'staff');
       toast.success(`Welcome back, ${user.fullName.split(' ')[0]}`);
       const dest =
-        redirectTo && !redirectTo.startsWith('/staff') ? redirectTo : '/app';
+        redirectTo &&
+        redirectTo.startsWith('/staff') &&
+        !redirectTo.startsWith('/staff/signin') &&
+        !redirectTo.startsWith('/staff/forgot-password')
+          ? redirectTo
+          : '/staff';
       navigate(dest, { replace: true });
     } catch (error) {
       if (error instanceof ApiError) {
@@ -48,22 +53,60 @@ export default function SignIn() {
   }
 
   return (
-    <div className="grid min-h-dvh lg:grid-cols-[1fr_1fr]">
-      <div className="relative flex flex-col px-5 py-6 sm:px-10">
-        <div className="flex items-center justify-between">
-          <Link to="/" className="rounded-md">
+    <div className="grid min-h-dvh lg:grid-cols-[1.05fr_1fr]">
+      <aside className="relative hidden overflow-hidden bg-[hsl(226_45%_10%)] px-12 text-white lg:flex lg:flex-col lg:justify-between lg:py-10">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-80"
+          style={{
+            background:
+              'radial-gradient(ellipse 70% 50% at 20% 0%, hsl(234 82% 58% / 0.45), transparent 55%), radial-gradient(ellipse 50% 40% at 90% 80%, hsl(190 90% 44% / 0.18), transparent 50%)',
+          }}
+          aria-hidden
+        />
+        <div className="relative">
+          <Link to="/" className="inline-flex rounded-md text-white">
+            <Logo />
+          </Link>
+        </div>
+        <div className="relative max-w-md pb-8">
+          <p className="text-2xs font-semibold uppercase tracking-[0.18em] text-white/60">Authorized access</p>
+          <h2 className="mt-4 text-4xl font-semibold tracking-tight">The desk, in one place.</h2>
+          <p className="mt-4 text-sm leading-relaxed text-white/70">
+            Review claims, verify ownership with a QR scan, and mark items returned — with every action on the record.
+          </p>
+          <ul className="mt-10 space-y-4">
+            {[
+              { icon: ShieldCheck, label: 'Claim review and verification notes' },
+              { icon: QrCode, label: 'QR labels that only staff can resolve' },
+              { icon: ScanLine, label: 'Handover recorded in a single transaction' },
+            ].map((item) => (
+              <li key={item.label} className="flex items-center gap-3 text-sm text-white/80">
+                <span className="flex size-9 items-center justify-center rounded-xl bg-white/10">
+                  <item.icon className="size-4" />
+                </span>
+                {item.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <p className="relative text-2xs text-white/40">CampusFind Staff Portal</p>
+      </aside>
+
+      <div className="flex flex-col bg-background px-5 py-6 sm:px-10">
+        <div className="flex items-center justify-between lg:justify-end">
+          <Link to="/" className="rounded-md lg:hidden">
             <Logo />
           </Link>
           <Button asChild variant="ghost" size="sm">
-            <Link to="/signup">Create account</Link>
+            <Link to="/signin">Student login</Link>
           </Button>
         </div>
 
         <div className="mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center py-12">
           <p className="text-2xs font-semibold uppercase tracking-wider text-primary">CampusFind</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-[2rem]">Student Login</h1>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-[2rem]">Staff Portal</h1>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Sign in to report a lost item, review matches, and follow your claims.
+            Sign in with your desk account to verify claims and return items.
           </p>
 
           <form onSubmit={handleSubmit} noValidate className="mt-8 space-y-4">
@@ -73,20 +116,20 @@ export default function SignIn() {
                 className="rounded-2xl border border-danger/25 bg-danger-subtle px-3.5 py-2.5 text-sm text-danger"
               >
                 {formError}
-                {formError.includes('Staff Portal') ? (
-                  <Link to="/staff/signin" className="mt-1.5 block font-medium underline-offset-4 hover:underline">
-                    Open the Staff Portal
+                {formError.includes('student login') ? (
+                  <Link to="/signin" className="mt-1.5 block font-medium underline-offset-4 hover:underline">
+                    Go to Student Login
                   </Link>
                 ) : null}
               </div>
             ) : null}
 
-            <Field label="Email" htmlFor="email" required error={fieldErrors.email}>
+            <Field label="Staff email" htmlFor="email" required error={fieldErrors.email}>
               <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@campus.edu"
+                placeholder="you@campusfind.edu"
                 autoComplete="email"
                 required
               />
@@ -116,7 +159,7 @@ export default function SignIn() {
 
             <div className="-mt-1 flex justify-end">
               <Link
-                to="/forgot-password"
+                to="/staff/forgot-password"
                 className="text-xs font-medium text-primary hover:underline"
               >
                 Forgot password?
@@ -128,53 +171,11 @@ export default function SignIn() {
             </Button>
           </form>
 
-          <p className="mt-6 text-sm text-muted-foreground">
-            New to CampusFind?{' '}
-            <Link to="/signup" className="font-medium text-primary hover:underline">
-              Create account
-            </Link>
+          <p className="mt-8 text-xs leading-relaxed text-muted-foreground">
+            Staff accounts are issued by the project owner. There is no public staff signup.
           </p>
-
-          <div className="mt-10 border-t border-border pt-6">
-            <Link
-              to="/staff/signin"
-              className="group inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Are you a staff member? Sign in to the Staff Portal
-              <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-          </div>
         </div>
       </div>
-
-      <aside className="hero-mesh relative hidden flex-col justify-center border-l border-border px-12 lg:flex">
-        <div className="relative mx-auto w-full max-w-md">
-          <p className="text-2xs font-semibold uppercase tracking-wider text-primary">For students</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight">
-            Lost something on campus? We’ll help you find it.
-          </h2>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            One report. Automatic matching. A verified handover when it turns up at the desk.
-          </p>
-          <ul className="mt-8 space-y-4">
-            {[
-              { icon: ClipboardList, title: 'Report once', body: 'Describe what you lost and where you last had it.' },
-              { icon: PackageSearch, title: 'See matches', body: 'Every new hand-in is scored against your report.' },
-              { icon: ShieldCheck, title: 'Claim safely', body: 'Desk staff verify ownership before anything is returned.' },
-            ].map((item) => (
-              <li key={item.title} className="flex gap-3.5">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary-subtle text-primary">
-                  <item.icon className="size-4" />
-                </span>
-                <span>
-                  <span className="block text-sm font-semibold">{item.title}</span>
-                  <span className="mt-0.5 block text-sm text-muted-foreground">{item.body}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </aside>
     </div>
   );
 }

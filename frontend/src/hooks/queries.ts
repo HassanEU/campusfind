@@ -95,6 +95,18 @@ export function useStaffDashboard() {
           qrCode: string | null; submittedAt: string; matchScore: number | null;
         }[];
         recentReturns: ReturnRecord[];
+        recentLost: {
+          lostItemId: number; itemName: string; status: string; lostDate: string;
+          locationName: string; reporterName: string; categoryName: string;
+        }[];
+        recentFound: {
+          foundItemId: number; itemName: string; status: string; foundDate: string;
+          locationName: string; qrCode: string | null; categoryName: string;
+        }[];
+        potentialMatches: {
+          matchId: number; totalScore: number; lostItemName: string;
+          foundItemName: string; matchStatus: string; foundLocation: string;
+        }[];
       }>('/dashboard/staff'),
   });
 }

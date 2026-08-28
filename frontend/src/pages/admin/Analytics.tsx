@@ -86,7 +86,7 @@ export default function AdminAnalytics() {
   return (
     <div className="page">
       <PageHeader
-        title="Campus analytics"
+        title="Campus insights"
         description="Every figure below is computed in PostgreSQL at request time — nothing on this page is precomputed or hard-coded."
       />
 

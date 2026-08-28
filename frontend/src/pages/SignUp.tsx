@@ -10,7 +10,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { ApiError } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
-/** The same rules the API enforces, shown live so nobody guesses. */
 const RULES = [
   { label: 'At least 8 characters', test: (v: string) => v.length >= 8 },
   { label: 'One lowercase letter', test: (v: string) => /[a-z]/.test(v) },
@@ -71,7 +70,8 @@ export default function SignUp() {
 
   return (
     <div className="min-h-dvh">
-      <div className="flex items-center justify-between px-5 py-6 sm:px-10">
+      <div className="hero-mesh absolute inset-x-0 top-0 h-72" aria-hidden />
+      <div className="relative flex items-center justify-between px-5 py-6 sm:px-10">
         <Link to="/" className="rounded-md">
           <Logo />
         </Link>
@@ -83,17 +83,17 @@ export default function SignUp() {
         </Button>
       </div>
 
-      <div className="mx-auto w-full max-w-md px-5 pb-16">
-        <h1 className="text-2xl font-semibold tracking-tight">Create your account</h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          Students can report lost items, review matches and claim what belongs to them.
+      <div className="relative mx-auto w-full max-w-md px-5 pb-16">
+        <h1 className="text-3xl font-semibold tracking-tight">Create a student account</h1>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          Report lost items, review matches, and claim what belongs to you.
         </p>
 
-        <form onSubmit={handleSubmit} noValidate className="mt-7 space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="mt-8 space-y-4">
           {formError ? (
             <div
               role="alert"
-              className="rounded-md border border-danger/25 bg-danger-subtle px-3 py-2.5 text-sm text-danger"
+              className="rounded-2xl border border-danger/25 bg-danger-subtle px-3.5 py-2.5 text-sm text-danger"
             >
               {formError}
             </div>
@@ -131,8 +131,6 @@ export default function SignUp() {
             />
           </Field>
 
-          {/* Requirements appear as soon as the user starts typing, and tick
-              off one by one rather than failing all at once on submit. */}
           {form.password || touchedPassword ? (
             <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5" aria-live="polite">
               {RULES.map((rule) => {
@@ -181,19 +179,19 @@ export default function SignUp() {
             type="submit"
             variant="primary"
             className="w-full"
+            size="lg"
             loading={submitting}
             disabled={!passwordOk && form.password.length > 0}
           >
-            {submitting ? 'Creating account' : 'Create account'}
+            {submitting ? 'Creating account' : 'Create student account'}
           </Button>
 
           <p className="text-xs leading-relaxed text-muted-foreground">
-            Staff and administrator accounts are created by an existing administrator, not through
-            this form.
+            This form creates a student account only. Staff access is issued separately.
           </p>
         </form>
 
-        <p className="mt-5 text-sm text-muted-foreground">
+        <p className="mt-6 text-sm text-muted-foreground">
           Already registered?{' '}
           <Link to="/signin" className="font-medium text-primary hover:underline">
             Sign in

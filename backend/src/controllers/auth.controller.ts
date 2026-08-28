@@ -7,6 +7,11 @@ export const register: RequestHandler = async (req, res) => {
   res.status(201).json(result);
 };
 
+export const staffSetup: RequestHandler = async (req, res) => {
+  const result = await authService.createStaffAccount(req.body);
+  res.status(201).json(result);
+};
+
 export const login: RequestHandler = async (req, res) => {
   const result = await authService.login(req.body);
   res.json(result);

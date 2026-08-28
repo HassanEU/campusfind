@@ -1,13 +1,14 @@
 import * as React from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { apiRequest, tokenStore } from '@/lib/api';
+import { ApiError, apiRequest, tokenStore } from '@/lib/api';
+import { isDeskRole, roleAllowed } from '@/lib/roles';
 import type { Role, User } from '@/types';
 
 interface AuthState {
   user: User | null;
   /** True only while the initial "who am I?" request is in flight. */
   initializing: boolean;
-  signIn: (email: string, password: string) => Promise<User>;
+  signIn: (email: string, password: string, portal?: 'student' | 'staff') => Promise<User>;
   signUp: (input: SignUpInput) => Promise<User>;
   signOut: () => void;
   hasRole: (...roles: Role[]) => boolean;
@@ -56,11 +57,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = React.useCallback(
-    async (email: string, password: string) => {
+    async (email: string, password: string, portal: 'student' | 'staff' = 'student') => {
       const result = await apiRequest<{ user: User; token: string }>('/auth/login', {
         method: 'POST',
         body: { email, password },
       });
+
+      const desk = isDeskRole(result.user.role);
+      if (portal === 'student' && desk) {
+        throw new ApiError(
+          403,
+          'Staff members sign in through the Staff Portal.',
+          'WRONG_PORTAL',
+        );
+      }
+      if (portal === 'staff' && !desk) {
+        throw new ApiError(
+          403,
+          'This portal is for desk staff. Use the student login to continue.',
+          'WRONG_PORTAL',
+        );
+      }
+
       tokenStore.set(result.token);
       setUser(result.user);
       return result.user;
@@ -88,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [queryClient]);
 
   const hasRole = React.useCallback(
-    (...roles: Role[]) => (user ? roles.includes(user.role) : false),
+    (...roles: Role[]) => (user ? roleAllowed(user.role, roles) : false),
     [user],
   );
 

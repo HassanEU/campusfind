@@ -8,9 +8,13 @@
 -- fn_resolution_rate()
 -- What percentage of handed-in items actually made it back to their owner?
 --
---   returned items
---   -------------- x 100
+--   returned found items
+--   -------------------- x 100
 --   all found items
+--
+-- Computed from live found_items rows (not a display constant). Seed data is
+-- shaped so a well-run desk lands in the low nineties while a couple of items
+-- remain open for the live demo.
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_resolution_rate()
 RETURNS NUMERIC

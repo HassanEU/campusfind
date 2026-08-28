@@ -85,16 +85,41 @@ export const studentDashboard: RequestHandler = async (req, res) => {
 };
 
 export const staffDashboard: RequestHandler = async (_req, res) => {
-  const [counters, queue, recentReturns] = await Promise.all([
-    analyticsRepo.staffDashboard(),
-    query(
-      `SELECT claim_id, claimant_name, found_item_name, qr_code, submitted_at, match_score
-         FROM v_pending_claims ORDER BY submitted_at ASC LIMIT 6`,
-    ),
-    query(`SELECT * FROM v_return_history ORDER BY returned_at DESC LIMIT 5`),
-  ]);
+  const [counters, queue, recentReturns, recentLost, recentFound, potentialMatches] =
+    await Promise.all([
+      analyticsRepo.staffDashboard(),
+      query(
+        `SELECT claim_id, claimant_name, found_item_name, qr_code, submitted_at, match_score
+           FROM v_pending_claims ORDER BY submitted_at ASC LIMIT 6`,
+      ),
+      query(`SELECT * FROM v_return_history ORDER BY returned_at DESC LIMIT 5`),
+      query(
+        `SELECT lost_item_id, item_name, status, lost_date, location_name, reporter_name, category_name
+           FROM v_lost_items_detail ORDER BY created_at DESC LIMIT 5`,
+      ),
+      query(
+        `SELECT found_item_id, item_name, status, found_date, location_name, qr_code, category_name
+           FROM v_found_items_detail ORDER BY created_at DESC LIMIT 5`,
+      ),
+      query(
+        `SELECT match_id, total_score, lost_item_name, found_item_name, match_status, found_location
+           FROM v_match_overview
+          WHERE match_status = 'POTENTIAL'
+          ORDER BY total_score DESC
+          LIMIT 5`,
+      ),
+    ]);
 
-  res.json(camelize({ counters, queue: queue.rows, recentReturns: recentReturns.rows }));
+  res.json(
+    camelize({
+      counters,
+      queue: queue.rows,
+      recentReturns: recentReturns.rows,
+      recentLost: recentLost.rows,
+      recentFound: recentFound.rows,
+      potentialMatches: potentialMatches.rows,
+    }),
+  );
 };
 
 export const adminAnalytics: RequestHandler = async (_req, res) => {

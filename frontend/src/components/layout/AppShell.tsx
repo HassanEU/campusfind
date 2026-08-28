@@ -4,8 +4,8 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import * as Popover from '@radix-ui/react-popover';
 import {
-  Bell, ClipboardList, LayoutDashboard, LogOut, MapPin, Menu, Moon, PackageSearch,
-  QrCode, ScrollText, Search, Settings, ShieldCheck, Sun, Tags, Users, X,
+  Bell, ClipboardList, LayoutDashboard, LogOut, Menu, Moon, PackageSearch,
+  QrCode, ScrollText, Search, Settings, ShieldCheck, Sparkles, Sun, X,
 } from 'lucide-react';
 
 import { Logo } from './Logo';
@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/primitives';
 import { useAuth } from '@/hooks/useAuth';
 import { useMarkAllRead, useMarkNotificationRead, useNotifications } from '@/hooks/queries';
+import { homeFor, isDeskRole, roleAllowed, roleLabel } from '@/lib/roles';
 import { cn, formatRelative, initials } from '@/lib/utils';
 import type { Role } from '@/types';
 
@@ -26,22 +27,18 @@ interface NavItem {
 
 /** One list drives the sidebar, the mobile drawer and the bottom bar. */
 const NAV: NavItem[] = [
-  { to: '/app', label: 'Dashboard', icon: LayoutDashboard, roles: ['STUDENT'], section: 'Me' },
-  { to: '/app/reports', label: 'My reports', icon: ClipboardList, roles: ['STUDENT'], section: 'Me' },
-  { to: '/app/matches', label: 'Matches', icon: PackageSearch, roles: ['STUDENT'], section: 'Me' },
-  { to: '/app/claims', label: 'My claims', icon: ShieldCheck, roles: ['STUDENT'], section: 'Me' },
-  { to: '/app/browse', label: 'Browse found items', icon: Search, roles: ['STUDENT', 'STAFF', 'ADMIN'], section: 'Campus' },
+  { to: '/app', label: 'Home', icon: LayoutDashboard, roles: ['STUDENT'], section: 'Your campus' },
+  { to: '/app/reports', label: 'My reports', icon: ClipboardList, roles: ['STUDENT'], section: 'Your campus' },
+  { to: '/app/matches', label: 'Matches', icon: PackageSearch, roles: ['STUDENT'], section: 'Your campus' },
+  { to: '/app/claims', label: 'My claims', icon: ShieldCheck, roles: ['STUDENT'], section: 'Your campus' },
+  { to: '/app/browse', label: 'Browse found items', icon: Search, roles: ['STUDENT', 'STAFF'], section: 'Campus' },
 
-  { to: '/staff', label: 'Desk overview', icon: LayoutDashboard, roles: ['STAFF', 'ADMIN'], section: 'Lost & found desk' },
-  { to: '/staff/verify', label: 'Verify & return', icon: QrCode, roles: ['STAFF', 'ADMIN'], section: 'Lost & found desk' },
-  { to: '/staff/claims', label: 'Claim queue', icon: ShieldCheck, roles: ['STAFF', 'ADMIN'], section: 'Lost & found desk' },
-  { to: '/staff/storage', label: 'Storage', icon: PackageSearch, roles: ['STAFF', 'ADMIN'], section: 'Lost & found desk' },
-
-  { to: '/admin', label: 'Analytics', icon: LayoutDashboard, roles: ['ADMIN'], section: 'Administration' },
-  { to: '/admin/users', label: 'Users', icon: Users, roles: ['ADMIN'], section: 'Administration' },
-  { to: '/admin/categories', label: 'Categories', icon: Tags, roles: ['ADMIN'], section: 'Administration' },
-  { to: '/admin/locations', label: 'Locations', icon: MapPin, roles: ['ADMIN'], section: 'Administration' },
-  { to: '/admin/audit', label: 'Audit log', icon: ScrollText, roles: ['STAFF', 'ADMIN'], section: 'Administration' },
+  { to: '/staff', label: 'Desk', icon: LayoutDashboard, roles: ['STAFF'], section: 'Lost & found desk' },
+  { to: '/staff/verify', label: 'Verify & return', icon: QrCode, roles: ['STAFF'], section: 'Lost & found desk' },
+  { to: '/staff/claims', label: 'Claim queue', icon: ShieldCheck, roles: ['STAFF'], section: 'Lost & found desk' },
+  { to: '/staff/storage', label: 'Storage', icon: PackageSearch, roles: ['STAFF'], section: 'Lost & found desk' },
+  { to: '/staff/insights', label: 'Insights', icon: Sparkles, roles: ['STAFF'], section: 'Operations' },
+  { to: '/staff/audit', label: 'Audit log', icon: ScrollText, roles: ['STAFF'], section: 'Operations' },
 ];
 
 /* ------------------------------- dark mode -------------------------------- */
@@ -78,6 +75,7 @@ export function ThemeToggle() {
 /* ------------------------------ notifications ----------------------------- */
 
 function NotificationBell() {
+  const { user } = useAuth();
   const { data = [] } = useNotifications();
   const markRead = useMarkNotificationRead();
   const markAll = useMarkAllRead();
@@ -87,9 +85,8 @@ function NotificationBell() {
   const unread = data.filter((n) => !n.isRead).length;
 
   const routeFor = (type: string | null, id: number | null) => {
-    if (!id) return null;
-    if (type === 'LOST_ITEM') return `/app/reports/${id}`;
-    if (type === 'CLAIM') return `/app/claims`;
+    if (type === 'CLAIM') return isDeskRole(user?.role) ? '/staff/claims' : '/app/claims';
+    if (type === 'LOST_ITEM' && id) return isDeskRole(user?.role) ? '/staff' : `/app/reports/${id}`;
     return null;
   };
 
@@ -116,7 +113,7 @@ function NotificationBell() {
           align="end"
           sideOffset={8}
           className={cn(
-            'z-50 w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-lg border border-border bg-surface-raised shadow-popover',
+            'z-50 w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-surface-raised shadow-popover',
             'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
           )}
         >
@@ -191,7 +188,7 @@ function UserMenu() {
   const navigate = useNavigate();
   if (!user) return null;
 
-  const roleLabel = { STUDENT: 'Student', STAFF: 'Desk staff', ADMIN: 'Administrator' }[user.role];
+  const roleName = roleLabel(user.role);
 
   return (
     <DropdownMenu.Root>
@@ -212,12 +209,12 @@ function UserMenu() {
         <DropdownMenu.Content
           align="end"
           sideOffset={8}
-          className="z-50 w-60 overflow-hidden rounded-lg border border-border bg-surface-raised p-1 shadow-popover data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+          className="z-50 w-60 overflow-hidden rounded-2xl border border-border bg-surface-raised p-1 shadow-popover data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
         >
           <div className="px-3 py-2.5">
             <p className="truncate text-sm font-medium">{user.fullName}</p>
             <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-            <Badge tone="primary" className="mt-2">{roleLabel}</Badge>
+            <Badge tone="primary" className="mt-2">{roleName}</Badge>
           </div>
 
           <DropdownMenu.Separator className="my-1 h-px bg-border" />
@@ -252,7 +249,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const { user } = useAuth();
   if (!user) return null;
 
-  const items = NAV.filter((item) => item.roles.includes(user.role));
+  const items = NAV.filter((item) => roleAllowed(user.role, item.roles));
   const sections = [...new Set(items.map((i) => i.section))];
 
   return (
@@ -273,7 +270,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
                     onClick={onNavigate}
                     className={({ isActive }) =>
                       cn(
-                        'flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                        'flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition-colors',
                         isActive
                           ? 'bg-primary-subtle text-primary'
                           : 'text-muted-foreground hover:bg-surface-muted hover:text-foreground',
@@ -293,12 +290,6 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 /* ------------------------------- app shell -------------------------------- */
-
-function homeFor(role?: Role) {
-  if (role === 'ADMIN') return '/admin';
-  if (role === 'STAFF') return '/staff';
-  return '/app';
-}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();

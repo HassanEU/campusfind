@@ -87,7 +87,7 @@ export function Field({
 /* ================================= Input ================================= */
 
 const controlClasses = [
-  'flex w-full rounded-md border border-input bg-surface text-sm text-foreground shadow-xs',
+  'flex w-full rounded-xl border border-input bg-surface text-sm text-foreground shadow-xs',
   'placeholder:text-muted-foreground/70',
   'transition-[border-color,box-shadow] duration-150',
   'focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0',
@@ -97,7 +97,7 @@ const controlClasses = [
 
 export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   ({ className, ...props }, ref) => (
-    <input ref={ref} className={cn(controlClasses, 'h-9 px-3 py-2', className)} {...props} />
+    <input ref={ref} className={cn(controlClasses, 'h-11 px-3.5 py-2', className)} {...props} />
   ),
 );
 Input.displayName = 'Input';
@@ -151,7 +151,7 @@ export const SelectContent = React.forwardRef<
       ref={ref}
       position={position}
       className={cn(
-        'relative z-50 max-h-72 min-w-[8rem] overflow-hidden rounded-md border border-border bg-surface-raised shadow-popover',
+        'relative z-50 max-h-72 min-w-[8rem] overflow-hidden rounded-2xl border border-border bg-surface-raised shadow-popover',
         'data-[state=open]:animate-in data-[state=closed]:animate-out',
         'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
         'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',

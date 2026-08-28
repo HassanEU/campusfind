@@ -51,7 +51,7 @@ export const TabsContent = TabsPrimitive.Content;
  */
 export function TableWrap({ className, children }: { className?: string; children: React.ReactNode }) {
   return (
-    <div className={cn('scroll-thin w-full overflow-x-auto rounded-lg border border-border bg-surface', className)}>
+    <div className={cn('scroll-thin w-full overflow-x-auto rounded-2xl border border-border bg-surface', className)}>
       {children}
     </div>
   );
@@ -176,11 +176,11 @@ export function Stat({
   }[tone];
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-4 shadow-xs">
+    <div className="rounded-2xl border border-border/80 bg-surface p-5 shadow-xs">
       <div className="flex items-start justify-between gap-3">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
         {Icon ? (
-          <span className={cn('flex size-7 items-center justify-center rounded-md', toneClasses)}>
+          <span className={cn('flex size-8 items-center justify-center rounded-xl', toneClasses)}>
             <Icon className="size-3.5" />
           </span>
         ) : null}

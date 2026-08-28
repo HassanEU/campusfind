@@ -12,26 +12,25 @@
   :root {
     /* Canvas is a hair warm so long reading sessions are easier on the eye
        than pure #FFFFFF, while panels stay white to create hierarchy. */
-    --background: 220 20% 98%;
-    --foreground: 222 44% 11%;
+    --background: 224 40% 98%;
+    --foreground: 226 45% 10%;
 
     --surface: 0 0% 100%;
-    --surface-muted: 220 22% 96.5%;
+    --surface-muted: 224 32% 96.5%;
     --surface-raised: 0 0% 100%;
 
-    --muted: 220 20% 96%;
-    --muted-foreground: 220 12% 46%;
+    --muted: 224 28% 95%;
+    --muted-foreground: 224 12% 44%;
 
-    --border: 220 18% 90%;
-    --input: 220 18% 88%;
-    --ring: 226 72% 56%;
+    --border: 224 24% 90%;
+    --input: 224 22% 88%;
+    --ring: 234 82% 60%;
 
-    /* Brand: an assured indigo-blue. Used for primary actions and nothing
-       decorative, so a blue element always means "this is the main action". */
-    --primary: 226 72% 56%;
-    --primary-hover: 226 68% 50%;
+    --primary: 234 82% 58%;
+    --primary-hover: 234 76% 50%;
     --primary-foreground: 0 0% 100%;
-    --primary-subtle: 226 82% 96%;
+    --primary-subtle: 234 90% 96%;
+    --cyan: 190 90% 44%;
 
     /* Workflow semantics */
     --success: 158 68% 33%;
@@ -59,12 +58,13 @@
 
     --border: 224 22% 19%;
     --input: 224 22% 22%;
-    --ring: 226 78% 66%;
+    --ring: 234 86% 70%;
 
-    --primary: 226 78% 64%;
-    --primary-hover: 226 78% 70%;
-    --primary-foreground: 224 40% 10%;
-    --primary-subtle: 226 45% 20%;
+    --primary: 234 86% 68%;
+    --primary-hover: 234 86% 74%;
+    --primary-foreground: 226 45% 10%;
+    --primary-subtle: 234 40% 18%;
+    --cyan: 190 80% 56%;
 
     --success: 158 58% 46%;
     --success-subtle: 158 40% 17%;
@@ -127,7 +127,21 @@
 @layer components {
   /* The page-level grid every authenticated screen uses. */
   .page {
-    @apply mx-auto w-full max-w-[1200px] px-4 py-6 sm:px-6 sm:py-7 lg:px-8;
+    @apply mx-auto w-full max-w-[1180px] px-4 py-7 sm:px-6 sm:py-8 lg:px-8;
+  }
+
+  .hero-mesh {
+    background:
+      radial-gradient(ellipse 70% 50% at 50% -10%, hsl(234 82% 58% / 0.18), transparent 55%),
+      radial-gradient(ellipse 40% 40% at 90% 20%, hsl(190 90% 44% / 0.12), transparent 50%),
+      radial-gradient(ellipse 40% 40% at 8% 60%, hsl(234 82% 58% / 0.08), transparent 50%);
+  }
+
+  .dark .hero-mesh {
+    background:
+      radial-gradient(ellipse 70% 50% at 50% -10%, hsl(234 86% 68% / 0.22), transparent 55%),
+      radial-gradient(ellipse 40% 40% at 90% 20%, hsl(190 80% 56% / 0.12), transparent 50%),
+      radial-gradient(ellipse 40% 40% at 8% 60%, hsl(234 86% 68% / 0.1), transparent 50%);
   }
 
   /* Loading placeholder with a light sweep rather than a pulsing block. */

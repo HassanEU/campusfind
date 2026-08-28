@@ -4,11 +4,9 @@ import animate from 'tailwindcss-animate';
 /**
  * The CampusFind design system.
  *
- * Identity: a calm, dense, "operational" interface. Ink-blue neutrals rather
- * than pure grey, one confident brand accent, and semantic colours that map
- * directly onto the workflow states (open / matched / pending / returned).
- * Small radii, hairline borders and restrained shadows — depth comes from the
- * surface hierarchy, not from drop shadows.
+ * A premium product surface: generous radii, layered indigo/cyan accents,
+ * calm neutrals, and semantic colours that map onto the lost-and-found
+ * workflow (open / matched / pending / returned).
  */
 export default {
   darkMode: ['class'],
@@ -54,9 +52,9 @@ export default {
       },
 
       borderRadius: {
-        lg: '10px',
-        md: '8px',
-        sm: '6px',
+        lg: '1.25rem',
+        md: '0.875rem',
+        sm: '0.625rem',
       },
 
       fontFamily: {

@@ -4,10 +4,13 @@
 -- Runs the matching engine over the seeded reports and then walks a few of
 -- them through the full lifecycle so the dashboards have believable history:
 --
---   * three items already returned  -> resolution rate, return history, audit
+--   * most handed-in items already returned -> a realistic ~93% return rate
 --   * one claim waiting for staff   -> the staff review queue is not empty
 --   * one rejected claim            -> the "rejected" branch is demonstrable
 --   * the AirPods match left open   -> this is the live demo you present
+--
+-- Seed 004 then completes remaining historical handovers (except AirPods and
+-- the calculator still sitting in the claim queue).
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------

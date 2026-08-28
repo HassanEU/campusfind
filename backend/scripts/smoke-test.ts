@@ -113,6 +113,21 @@ async function run() {
     check('Self-registration always creates a STUDENT', reg.body.user?.role === 'STUDENT');
     studentToken = reg.body.token;
 
+    const staffSetupGuess = await api('/auth/staff-setup', {
+      method: 'POST',
+      body: {
+        fullName: 'Guessed Staff',
+        email: `guessed.staff.${stamp}@campus.edu`,
+        password: 'Campus@123',
+        setupSecret: 'not-the-real-setup-key',
+      },
+    });
+    check(
+      'Staff setup rejects a guessed secret (401 when enabled, 404 when disabled)',
+      staffSetupGuess.status === 401 || staffSetupGuess.status === 404,
+      staffSetupGuess.body,
+    );
+
     const dup = await api('/auth/register', {
       method: 'POST',
       body: { fullName: 'Duplicate', email: studentEmail, password: 'Campus@123' },

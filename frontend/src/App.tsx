@@ -1,17 +1,19 @@
-import { Suspense, lazy } from 'react';
+import type { Role } from '@/types';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Suspense, lazy, type ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
 
 import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/hooks/useAuth';
-import type { Role } from '@/types';
+import { homeFor, roleAllowed } from '@/lib/roles';
 
 import Landing from '@/pages/Landing';
 import SignIn from '@/pages/SignIn';
 import SignUp from '@/pages/SignUp';
+import StaffSignIn from '@/pages/StaffSignIn';
+import ForgotPassword from '@/pages/ForgotPassword';
+import DeskSetup from '@/pages/DeskSetup';
 
-/* Route-level code splitting: the landing page and auth screens load on their
-   own, and each role's area only downloads when someone actually goes there. */
 const StudentDashboard = lazy(() => import('@/pages/student/Dashboard'));
 const MyReports = lazy(() => import('@/pages/student/MyReports'));
 const ReportDetail = lazy(() => import('@/pages/student/ReportDetail'));
@@ -27,11 +29,7 @@ const StaffDashboard = lazy(() => import('@/pages/staff/Dashboard'));
 const Verify = lazy(() => import('@/pages/staff/Verify'));
 const ClaimQueue = lazy(() => import('@/pages/staff/ClaimQueue'));
 const Storage = lazy(() => import('@/pages/staff/Storage'));
-
-const AdminAnalytics = lazy(() => import('@/pages/admin/Analytics'));
-const AdminUsers = lazy(() => import('@/pages/admin/Users'));
-const AdminCategories = lazy(() => import('@/pages/admin/Categories'));
-const AdminLocations = lazy(() => import('@/pages/admin/Locations'));
+const StaffInsights = lazy(() => import('@/pages/admin/Analytics'));
 const AuditLog = lazy(() => import('@/pages/admin/AuditLog'));
 
 function FullPageSpinner() {
@@ -52,31 +50,25 @@ function RouteSpinner() {
   );
 }
 
-/**
- * Guards a route. An unauthenticated visitor is sent to sign in and remembers
- * where they were going; a signed-in user with the wrong role is sent to their
- * own home rather than shown a dead end.
- */
-function Protected({ roles, children }: { roles?: Role[]; children: React.ReactNode }) {
+function Protected({ roles, children }: { roles?: Role[]; children: ReactNode }) {
   const { user, initializing } = useAuth();
   const location = useLocation();
 
   if (initializing) return <FullPageSpinner />;
   if (!user) {
-    return <Navigate to="/signin" state={{ from: location.pathname + location.search }} replace />;
+    const from = location.pathname + location.search;
+    const staffArea =
+      location.pathname === '/staff' ||
+      (location.pathname.startsWith('/staff/') &&
+        !location.pathname.startsWith('/staff/signin') &&
+        !location.pathname.startsWith('/staff/forgot-password'));
+    return <Navigate to={staffArea ? '/staff/signin' : '/signin'} state={{ from }} replace />;
   }
-  if (roles && !roles.includes(user.role)) return <Navigate to={homeFor(user.role)} replace />;
+  if (roles && !roleAllowed(user.role, roles)) return <Navigate to={homeFor(user.role)} replace />;
 
   return <AppShell>{children}</AppShell>;
 }
 
-function homeFor(role: Role) {
-  if (role === 'ADMIN') return '/admin';
-  if (role === 'STAFF') return '/staff';
-  return '/app';
-}
-
-/** Sends a signed-in user straight to the right home page. */
 function RoleHome() {
   const { user, initializing } = useAuth();
   if (initializing) return <FullPageSpinner />;
@@ -90,7 +82,6 @@ export default function App() {
   return (
     <Suspense fallback={<RouteSpinner />}>
       <Routes>
-        {/* public */}
         <Route
           path="/"
           element={
@@ -99,8 +90,17 @@ export default function App() {
         />
         <Route path="/signin" element={user ? <RoleHome /> : <SignIn />} />
         <Route path="/signup" element={user ? <RoleHome /> : <SignUp />} />
+        <Route
+          path="/forgot-password"
+          element={user ? <RoleHome /> : <ForgotPassword portal="student" />}
+        />
+        <Route path="/staff/signin" element={user ? <RoleHome /> : <StaffSignIn />} />
+        <Route
+          path="/staff/forgot-password"
+          element={user ? <RoleHome /> : <ForgotPassword portal="staff" />}
+        />
+        <Route path="/desk-setup" element={user ? <RoleHome /> : <DeskSetup />} />
 
-        {/* student */}
         <Route path="/app" element={<Protected roles={['STUDENT']}><StudentDashboard /></Protected>} />
         <Route path="/app/reports" element={<Protected roles={['STUDENT']}><MyReports /></Protected>} />
         <Route path="/app/reports/:id" element={<Protected roles={['STUDENT']}><ReportDetail /></Protected>} />
@@ -112,18 +112,14 @@ export default function App() {
         <Route path="/app/browse" element={<Protected><Browse /></Protected>} />
         <Route path="/app/profile" element={<Protected><Profile /></Protected>} />
 
-        {/* staff */}
-        <Route path="/staff" element={<Protected roles={['STAFF', 'ADMIN']}><StaffDashboard /></Protected>} />
-        <Route path="/staff/verify" element={<Protected roles={['STAFF', 'ADMIN']}><Verify /></Protected>} />
-        <Route path="/staff/claims" element={<Protected roles={['STAFF', 'ADMIN']}><ClaimQueue /></Protected>} />
-        <Route path="/staff/storage" element={<Protected roles={['STAFF', 'ADMIN']}><Storage /></Protected>} />
+        <Route path="/staff" element={<Protected roles={['STAFF']}><StaffDashboard /></Protected>} />
+        <Route path="/staff/verify" element={<Protected roles={['STAFF']}><Verify /></Protected>} />
+        <Route path="/staff/claims" element={<Protected roles={['STAFF']}><ClaimQueue /></Protected>} />
+        <Route path="/staff/storage" element={<Protected roles={['STAFF']}><Storage /></Protected>} />
+        <Route path="/staff/insights" element={<Protected roles={['STAFF']}><StaffInsights /></Protected>} />
+        <Route path="/staff/audit" element={<Protected roles={['STAFF']}><AuditLog /></Protected>} />
 
-        {/* admin */}
-        <Route path="/admin" element={<Protected roles={['ADMIN']}><AdminAnalytics /></Protected>} />
-        <Route path="/admin/users" element={<Protected roles={['ADMIN']}><AdminUsers /></Protected>} />
-        <Route path="/admin/categories" element={<Protected roles={['ADMIN']}><AdminCategories /></Protected>} />
-        <Route path="/admin/locations" element={<Protected roles={['ADMIN']}><AdminLocations /></Protected>} />
-        <Route path="/admin/audit" element={<Protected roles={['STAFF', 'ADMIN']}><AuditLog /></Protected>} />
+        <Route path="/admin/*" element={<Navigate to="/staff" replace />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
