@@ -9,11 +9,11 @@ the item changes hands — recording every step in PostgreSQL as it goes.
 
 The database is not a storage bucket bolted onto a UI. The scoring engine, the workflow
 rules, the statistics and the audit history all live in PostgreSQL as functions, triggers,
-constraints and views.
+constraints and views .
 
 ---
 
-## Contents
+## CONTENTS
 
 - [Quick start](#quick-start)
 - [Demo accounts](#demo-accounts)
